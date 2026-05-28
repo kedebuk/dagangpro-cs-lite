@@ -13,7 +13,7 @@
 <div class="app">
   <div class="top">
     <h1>CS Lite DagangPro</h1>
-    <div class="muted" id="info">HTML ringan • sync VPS • v3-xhr</div>
+    <div class="muted" id="info">HTML ringan • sync VPS • v4-nokey</div>
     <div class="bar hide" id="filters">
       <input id="q" placeholder="Cari nama / WA / produk">
       <input id="date" placeholder="Tanggal: 2026-05-28">
@@ -22,11 +22,6 @@
       <button type="button" id="today">Hari ini</button>
     </div>
   </div>
-  <div id="lock" class="lock hide">
-    <b>Butuh secret link</b><br><br>
-    <input id="keyin" placeholder="Tempel key kalau link tidak lengkap">
-    <button type="button" class="green" id="save">Buka</button>
-  </div>
   <div id="list"></div>
   <div id="empty" class="empty hide">Tidak ada order.</div>
 </div>
@@ -34,7 +29,7 @@
 <script>
 (function(){
   var API='https://api-63f81986.dagangpro.online/v1/cs-lite';
-  var key='',orders=[];
+  var orders=[];
   function el(id){return document.getElementById(id)}
   function show(x){x.className=x.className.replace(/\bhide\b/g,'')}
   function hide(x){if(x.className.indexOf('hide')<0)x.className+=' hide'}
@@ -51,14 +46,13 @@
   function addr(o){return [o.customer_address,o.customer_district,o.customer_city].filter(function(x){return !!x}).join(', ')||'-'}
   function dataText(o){return ['Order: '+oid(o),'Nama: '+(o.customer_name||'-'),'WA: '+(o.customer_phone||'-'),'Produk: '+(o.product_name||'-'),'Total: '+rp(o.total_amount),'Status: '+(o.status||'-')+' / '+(o.payment_status||'-'),'Alamat: '+addr(o)].join('\n')}
   function copy(s){var ta=document.createElement('textarea');ta.value=s;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Disalin')}catch(e){toast('Copy manual ya')}document.body.removeChild(ta)}
-  function xhr(method,url,body,cb){var r=new XMLHttpRequest();r.open(method,url,true);r.timeout=10000;r.setRequestHeader('x-cs-lite-key',key);if(body)r.setRequestHeader('content-type','application/json');r.onreadystatechange=function(){if(r.readyState===4){var j=null;try{j=JSON.parse(r.responseText||'{}')}catch(e){}cb(r.status,j)}};r.ontimeout=function(){cb(0,{error:'timeout'})};r.onerror=function(){cb(0,{error:'network'})};r.send(body||null)}
-  function parseKey(){key=localStorage.getItem('dp_cs_lite_key')||'';var h=location.hash||'';var m=h.match(/key=([^&]+)/);if(m){key=decodeURIComponent(m[1]);localStorage.setItem('dp_cs_lite_key',key)}}
+  function xhr(method,url,body,cb){var r=new XMLHttpRequest();r.open(method,url,true);r.timeout=10000;if(body)r.setRequestHeader('content-type','application/json');r.onreadystatechange=function(){if(r.readyState===4){var j=null;try{j=JSON.parse(r.responseText||'{}')}catch(e){}cb(r.status,j)}};r.ontimeout=function(){cb(0,{error:'timeout'})};r.onerror=function(){cb(0,{error:'network'})};r.send(body||null)}
   function render(){var html='',i,o;for(i=0;i<orders.length;i++){o=orders[i];html+='<div class="card"><div class="name">'+esc(o.customer_name||'Tanpa nama')+'</div><div class="muted">'+esc(o.customer_phone||'-')+' • '+tgl(o.created_at)+'</div><div class="prod">'+esc(o.product_name||'-')+'</div><div class="line">Order: '+esc(oid(o))+'<br>Total: <b>'+rp(o.total_amount)+'</b><br>'+esc(addr(o))+'</div><span class="pill '+(paid(o)?'paid':'warn')+'">'+esc(o.payment_status||'-')+'</span><span class="pill '+(need(o)?'warn':'done')+'">'+(need(o)?'Perlu FU':'Sudah FU')+'</span><div class="act"><a class="wa" href="https://wa.me/'+hp(o.customer_phone)+'?text='+encodeURIComponent(fuText(o))+'" target="_blank">Chat WA</a><button type="button" class="copy" data-a="m" data-id="'+esc(o.id)+'">Copy template</button><button type="button" class="copy" data-a="d" data-id="'+esc(o.id)+'">Copy data</button><button type="button" class="ok" data-a="ok" data-id="'+esc(o.id)+'">Sudah FU</button></div></div>'}
     el('list').innerHTML=html;orders.length?hide(el('empty')):show(el('empty'))}
-  function load(){if(!key){show(el('lock'));hide(el('filters'));return}hide(el('lock'));show(el('filters'));text(el('info'),'Sync...');var p='limit=120';if(el('q').value)p+='&q='+encodeURIComponent(el('q').value);if(el('date').value)p+='&date='+encodeURIComponent(el('date').value);if(el('fu').value)p+='&followup='+encodeURIComponent(el('fu').value);xhr('GET',API+'/orders?'+p,null,function(st,j){if(st===401){localStorage.removeItem('dp_cs_lite_key');key='';show(el('lock'));hide(el('filters'));toast('Key salah');return}if(st!==200||!j||!j.ok){text(el('info'),'Sync gagal, pencet Refresh');toast('Sync gagal');return}orders=j.orders||[];render();text(el('info'),orders.length+' order • update '+tgl(j.server_time))})}
+  function load(){show(el('filters'));text(el('info'),'Sync...');var p='limit=120';if(el('q').value)p+='&q='+encodeURIComponent(el('q').value);if(el('date').value)p+='&date='+encodeURIComponent(el('date').value);if(el('fu').value)p+='&followup='+encodeURIComponent(el('fu').value);xhr('GET',API+'/orders?'+p,null,function(st,j){if(st===401){text(el('info'),'Akses ditolak dari browser ini');toast('Akses ditolak');return}if(st!==200||!j||!j.ok){text(el('info'),'Sync gagal, pencet Refresh');toast('Sync gagal');return}orders=j.orders||[];render();text(el('info'),orders.length+' order • update '+tgl(j.server_time))})}
   function mark(id){xhr('PATCH',API+'/orders/'+encodeURIComponent(id)+'/followup',JSON.stringify({status:'done',by:'CS Lite'}),function(st,j){if(st===200&&j&&j.ok){toast('Sudah FU');load()}else toast('Gagal update')})}
   function find(id){for(var i=0;i<orders.length;i++)if(orders[i].id===id)return orders[i];return {}}
-  parseKey();el('save').onclick=function(){key=el('keyin').value;localStorage.setItem('dp_cs_lite_key',key);load()};el('refresh').onclick=load;el('today').onclick=function(){var d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());el('date').value=d.toISOString().slice(0,10);load()};el('fu').onchange=load;el('q').onkeyup=function(e){e=e||window.event;if(e.keyCode===13)load()};el('list').onclick=function(e){e=e||window.event;var t=e.target||e.srcElement;if(!t.getAttribute)return;var id=t.getAttribute('data-id'),a=t.getAttribute('data-a'),o;if(!id)return;o=find(id);if(a==='ok')mark(id);if(a==='m')copy(fuText(o));if(a==='d')copy(dataText(o))};load();setInterval(load,30000);
+  el('refresh').onclick=load;el('today').onclick=function(){var d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());el('date').value=d.toISOString().slice(0,10);load()};el('fu').onchange=load;el('q').onkeyup=function(e){e=e||window.event;if(e.keyCode===13)load()};el('list').onclick=function(e){e=e||window.event;var t=e.target||e.srcElement;if(!t.getAttribute)return;var id=t.getAttribute('data-id'),a=t.getAttribute('data-a'),o;if(!id)return;o=find(id);if(a==='ok')mark(id);if(a==='m')copy(fuText(o));if(a==='d')copy(dataText(o))};load();setInterval(load,30000);
 })();
 </script>
 </body>
