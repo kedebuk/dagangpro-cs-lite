@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>DagangPro CS Lite</title>
+  <style>
+    :root{color-scheme:light;--bg:#f6f7fb;--card:#fff;--ink:#12202f;--muted:#687386;--line:#e4e8f0;--green:#11a36a;--blue:#2563eb;--red:#dc2626;--amber:#d97706;--soft:#eef7f3}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+    .wrap{max-width:980px;margin:0 auto;padding:16px 12px 90px}.top{position:sticky;top:0;z-index:10;background:rgba(246,247,251,.92);backdrop-filter:blur(12px);padding:14px 0 10px;border-bottom:1px solid rgba(228,232,240,.75)}
+    h1{font-size:22px;line-height:1.1;margin:0}.sub{font-size:12px;color:var(--muted);margin:5px 0 0}.grid{display:grid;gap:10px}.stats{grid-template-columns:repeat(4,1fr);margin:14px 0}.stat{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px}.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:var(--muted)}
+    .filters{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px;margin-bottom:12px}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+    input,select,button{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px 12px;font:inherit;background:#fff;color:var(--ink)}button{cursor:pointer;font-weight:800}.primary{background:var(--green);color:#fff;border-color:var(--green)}.blue{background:var(--blue);color:#fff;border-color:var(--blue)}.ghost{background:#f8fafc}.danger{background:#fff1f2;color:var(--red);border-color:#fecdd3}.order{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px;margin:10px 0;box-shadow:0 8px 24px rgba(15,23,42,.04)}
+    .order-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.name{font-size:17px;font-weight:900}.meta{font-size:12px;color:var(--muted);margin-top:3px}.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:800;background:#eef2ff;color:#3730a3;margin:3px 3px 0 0}.pill.green{background:#dcfce7;color:#166534}.pill.red{background:#fee2e2;color:#991b1b}.pill.amber{background:#fef3c7;color:#92400e}.pill.gray{background:#f1f5f9;color:#334155}.product{font-weight:800;margin:10px 0 6px}.addr{font-size:13px;color:#334155;line-height:1.45}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.actions a,.actions button{text-align:center;text-decoration:none;border-radius:14px;padding:11px 10px;font-weight:900;border:1px solid var(--line);font-size:14px}.wa{background:#16a34a;color:#fff;border-color:#16a34a!important}.copy{background:#eff6ff;color:#1d4ed8}.done{background:#f0fdf4;color:#166534}.detail{background:#f8fafc;color:#334155}.empty,.lock{background:var(--card);border:1px dashed var(--line);border-radius:22px;padding:22px;text-align:center;color:var(--muted);margin-top:14px}.toast{position:fixed;left:12px;right:12px;bottom:14px;background:#111827;color:#fff;border-radius:16px;padding:13px 14px;text-align:center;font-weight:800;transform:translateY(120%);transition:.2s;z-index:20}.toast.show{transform:translateY(0)}
+    @media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}.row,.row-3{grid-template-columns:1fr}.actions{grid-template-columns:1fr}h1{font-size:20px}.wrap{padding-left:10px;padding-right:10px}.order{border-radius:18px}.order-head{display:block}.top{padding-left:2px;padding-right:2px}}
+  </style>
+</head>
+<body>
+  <main class="wrap" id="app">
+    <section class="top">
+      <h1>DagangPro CS Lite</h1>
+      <p class="sub" id="syncText">Order ringan untuk follow-up CS • sync VPS</p>
+    </section>
+
+    <section id="lock" class="lock" hidden>
+      <b>Akses butuh secret link</b><br><br>
+      Buka link khusus dari admin, atau masukkan key manual di bawah ini.
+      <div style="height:10px"></div>
+      <input id="manualKey" placeholder="Tempel CS Lite key">
+      <div style="height:8px"></div>
+      <button class="primary" id="saveKeyBtn">Buka CS Lite</button>
+    </section>
+
+    <section id="main" hidden>
+      <div class="grid stats">
+        <div class="stat"><b id="stTotal">0</b><span>Total tampil</span></div>
+        <div class="stat"><b id="stNeed">0</b><span>Perlu FU</span></div>
+        <div class="stat"><b id="stPaid">0</b><span>Bayar</span></div>
+        <div class="stat"><b id="stPhysical">0</b><span>Fisik</span></div>
+      </div>
+
+      <section class="filters">
+        <div class="row">
+          <input id="q" placeholder="Cari nama / WA / produk / order ID">
+          <input id="date" type="date">
+        </div>
+        <div class="row-3">
+          <select id="type"><option value="">Semua tipe</option><option value="physical">Fisik</option><option value="digital">Digital</option></select>
+          <select id="status"><option value="">Semua status</option><option value="unpaid">Belum bayar</option><option value="paid">Bayar</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="shipped">Shipped</option><option value="delivered">Completed</option></select>
+          <select id="followup"><option value="">Semua FU</option><option value="needed">Perlu FU</option></select>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button class="blue" id="refreshBtn">Refresh</button>
+          <button class="ghost" id="todayBtn">Hari ini</button>
+        </div>
+      </section>
+      <section id="orders"></section>
+      <section id="empty" class="empty" hidden>Tidak ada order sesuai filter.</section>
+    </section>
+  </main>
+  <div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const API = 'https://api-63f81986.dagangpro.online/v1/cs-lite';
+  const els = Object.fromEntries(['lock','main','manualKey','saveKeyBtn','syncText','q','date','type','status','followup','refreshBtn','todayBtn','orders','empty','toast','stTotal','stNeed','stPaid','stPhysical'].map(id => [id, document.getElementById(id)]));
+  let key = localStorage.getItem('dp_cs_lite_key') || '';
+  let orders = [];
+  let timer = null;
+
+  function parseHashKey(){
+    const h = new URLSearchParams(location.hash.replace(/^#/, ''));
+    const k = h.get('key');
+    if(k){ key = k.trim(); localStorage.setItem('dp_cs_lite_key', key); history.replaceState(null, '', location.pathname + location.search); }
+  }
+  function toast(msg){ els.toast.textContent = msg; els.toast.classList.add('show'); setTimeout(()=>els.toast.classList.remove('show'), 1800); }
+  function idr(n){ return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n||0)); }
+  function dt(v){ if(!v) return '-'; return new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(v)); }
+  function cleanPhone(p){ let n=String(p||'').replace(/\D/g,''); if(n.startsWith('0')) n='62'+n.slice(1); if(n.startsWith('8')) n='62'+n; return n; }
+  function orderId(o){ return o.merchant_order_id || o.id || '-'; }
+  function isPaid(o){ return ['paid','completed'].includes(String(o.payment_status||'').toLowerCase()); }
+  function needsFu(o){ return String(o.cs_followup_status||'') !== 'done'; }
+  function statusPill(o){ if(isPaid(o)) return 'green'; if(['cancelled','failed'].includes(String(o.status||'').toLowerCase())) return 'red'; if(needsFu(o)) return 'amber'; return 'gray'; }
+  function statusLabel(o){ return `${o.status || '-'} / ${o.payment_status || '-'}`; }
+  function address(o){ return [o.customer_address,o.customer_district,o.customer_city].filter(Boolean).join(', ') || '-'; }
+  function fuMessage(o){
+    const name = o.customer_name ? ' ' + o.customer_name : '';
+    const product = o.product_name || 'pesanan Kakak';
+    const total = idr(o.total_amount || 0);
+    if(isPaid(o)) return `Halo${name}, pesanan ${product} dengan Order ID ${orderId(o)} sudah kami terima pembayarannya. Tim kami sedang proses ya. Terima kasih 🙏`;
+    if(String(o.payment_method||o.payment_gateway||'').toLowerCase().includes('cod')) return `Halo${name}, kami follow-up pesanan COD ${product} dengan Order ID ${orderId(o)}. Totalnya ${total}. Mohon konfirmasi data penerima dan alamatnya sudah benar ya 🙏`;
+    return `Halo${name}, kami follow-up pesanan ${product} dengan Order ID ${orderId(o)}. Total pembayaran ${total}. Kalau masih berminat, Kakak bisa lanjutkan pembayaran/konfirmasi di sini ya 🙏`;
+  }
+  function waLink(o){ const num=cleanPhone(o.customer_phone); return `https://wa.me/${num}?text=${encodeURIComponent(fuMessage(o))}`; }
+  async function copy(text){ await navigator.clipboard.writeText(text); toast('Disalin'); }
+  function summary(o){ return [`Order ID: ${orderId(o)}`,`Nama: ${o.customer_name||'-'}`,`WA: ${o.customer_phone||'-'}`,`Produk: ${o.product_name||'-'}`,`Qty: ${o.quantity||1}`,`Total: ${idr(o.total_amount||0)}`,`Status: ${statusLabel(o)}`,`Alamat: ${address(o)}`].join('\n'); }
+
+  function render(){
+    els.stTotal.textContent = orders.length;
+    els.stNeed.textContent = orders.filter(needsFu).length;
+    els.stPaid.textContent = orders.filter(isPaid).length;
+    els.stPhysical.textContent = orders.filter(o => String(o.product_type||'').toLowerCase()==='physical').length;
+    els.empty.hidden = orders.length > 0;
+    els.orders.innerHTML = orders.map(o => `
+      <article class="order">
+        <div class="order-head">
+          <div><div class="name">${esc(o.customer_name || 'Tanpa nama')}</div><div class="meta">${esc(o.customer_phone || '-')} • ${dt(o.created_at)}</div></div>
+          <div><span class="pill ${statusPill(o)}">${esc(statusLabel(o))}</span><span class="pill gray">${esc(o.product_type || '-')}</span>${needsFu(o)?'<span class="pill amber">Perlu FU</span>':'<span class="pill green">Sudah FU</span>'}</div>
+        </div>
+        <div class="product">${esc(o.product_name || '-')}</div>
+        <div class="addr">Order: ${esc(orderId(o))}<br>Total: <b>${idr(o.total_amount || 0)}</b><br>Alamat: ${esc(address(o))}</div>
+        <div class="actions">
+          <a class="wa" href="${waLink(o)}" target="_blank" rel="noopener">Chat WA</a>
+          <button class="copy" data-copy="msg" data-id="${esc(o.id)}">Copy template</button>
+          <button class="detail" data-copy="sum" data-id="${esc(o.id)}">Copy data</button>
+          <button class="done" data-done="${esc(o.id)}">Tandai sudah FU</button>
+        </div>
+      </article>`).join('');
+  }
+  function esc(v){ return String(v ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+
+  async function load(){
+    if(!key){ els.lock.hidden=false; els.main.hidden=true; return; }
+    els.lock.hidden=true; els.main.hidden=false; els.syncText.textContent='Syncing...';
+    const p = new URLSearchParams({limit:'200'});
+    ['q','date','type','status','followup'].forEach(id => { if(els[id].value) p.set(id, els[id].value); });
+    try{
+      const r = await fetch(`${API}/orders?${p}`, {headers:{'x-cs-lite-key':key}, cache:'no-store'});
+      if(r.status === 401){ localStorage.removeItem('dp_cs_lite_key'); key=''; els.lock.hidden=false; els.main.hidden=true; toast('Key salah / expired'); return; }
+      const d = await r.json(); if(!d.ok) throw new Error(d.error || 'Gagal sync');
+      orders = d.orders || []; render(); els.syncText.textContent = `Sync VPS OK • ${dt(d.server_time)}`;
+    }catch(e){ els.syncText.textContent='Sync gagal: '+e.message; toast('Sync gagal'); }
+  }
+  async function markDone(id){
+    try{
+      const r = await fetch(`${API}/orders/${encodeURIComponent(id)}/followup`, {method:'PATCH', headers:{'content-type':'application/json','x-cs-lite-key':key}, body:JSON.stringify({status:'done',by:'CS Lite'})});
+      const d = await r.json(); if(!d.ok) throw new Error(d.error || 'Gagal update'); toast('Sudah ditandai FU'); await load();
+    }catch(e){ toast(e.message); }
+  }
+  function today(){ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); els.date.value=d.toISOString().slice(0,10); load(); }
+
+  parseHashKey();
+  els.saveKeyBtn.onclick=()=>{ key=els.manualKey.value.trim(); if(key){ localStorage.setItem('dp_cs_lite_key',key); load(); }};
+  els.refreshBtn.onclick=load; els.todayBtn.onclick=today;
+  ['q','date','type','status','followup'].forEach(id => els[id].addEventListener('change', load));
+  els.q.addEventListener('keydown', e => { if(e.key==='Enter') load(); });
+  els.orders.addEventListener('click', e => {
+    const t=e.target; const id=t.dataset.done || t.dataset.id; if(!id) return;
+    const o=orders.find(x=>x.id===id); if(t.dataset.done) return markDone(id);
+    if(t.dataset.copy==='msg') return copy(fuMessage(o));
+    if(t.dataset.copy==='sum') return copy(summary(o));
+  });
+  load(); timer=setInterval(load, 30000); window.addEventListener('beforeunload',()=>clearInterval(timer));
+})();
+</script>
+</body>
+</html>
