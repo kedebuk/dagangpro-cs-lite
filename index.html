@@ -13,16 +13,16 @@
 <div class="app">
   <div class="top">
     <h1>CS Lite DagangPro</h1>
-    <div class="muted" id="info">HTML ringan • sync VPS • v6-filter</div>
-    <div class="bar hide" id="filters">
-      <input id="q" placeholder="Cari nama / WA / produk">
-      <select id="day"><option value="today">Hari ini</option><option value="yesterday">Kemarin</option><option value="all">Semua hari</option><option value="custom">Tanggal manual</option></select>
-      <input id="date" placeholder="Tanggal manual: 2026-05-28">
-      <select id="type"><option value="">Semua produk</option><option value="physical">Produk fisik</option><option value="digital">Produk digital</option></select>
-      <select id="fu"><option value="needed">Perlu FU</option><option value="">Semua order</option></select>
-      <button type="button" class="blue" id="refresh">Refresh</button>
-      <button type="button" id="today">Hari ini</button>
-    </div>
+    <div class="muted" id="info">HTML ringan • sync VPS • v7-native-form</div>
+    <form class="bar hide" id="filters" action="" method="get">
+      <input id="q" name="q" placeholder="Cari nama / WA / produk">
+      <select id="day" name="day"><option value="today">Hari ini</option><option value="yesterday">Kemarin</option><option value="all">Semua hari</option><option value="custom">Tanggal manual</option></select>
+      <input id="date" name="date" placeholder="Tanggal manual: 2026-05-28">
+      <select id="type" name="type"><option value="">Semua produk</option><option value="physical">Produk fisik</option><option value="digital">Produk digital</option></select>
+      <select id="fu" name="fu"><option value="needed">Perlu FU</option><option value="">Semua order</option></select>
+      <button type="submit" class="blue" id="refresh">Refresh</button>
+      <button type="button" id="today">Reset Hari Ini</button>
+    </form>
   </div>
   <div id="list"></div>
   <div id="empty" class="empty hide">Tidak ada order.</div>
@@ -51,12 +51,15 @@
   function xhr(method,url,body,cb){var r=new XMLHttpRequest();r.open(method,url,true);r.timeout=10000;if(body)r.setRequestHeader('content-type','application/json');r.onreadystatechange=function(){if(r.readyState===4){var j=null;try{j=JSON.parse(r.responseText||'{}')}catch(e){}cb(r.status,j)}};r.ontimeout=function(){cb(0,{error:'timeout'})};r.onerror=function(){cb(0,{error:'network'})};r.send(body||null)}
   function isoDate(offset){var d=new Date();d.setDate(d.getDate()+offset);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
   function selectedDate(){var v=el('day').value;if(v==='today')return isoDate(0);if(v==='yesterday')return isoDate(-1);if(v==='custom')return el('date').value;return ''}
+  function param(name){var q=location.search.replace(/^\?/, '').split('&');for(var i=0;i<q.length;i++){var kv=q[i].split('=');if(decodeURIComponent(kv[0]||'')===name)return decodeURIComponent((kv[1]||'').replace(/\+/g,' '))}return ''}
+  function applyUrlFilters(){var v;v=param('q');if(v)el('q').value=v;v=param('day');if(v)el('day').value=v;v=param('date');if(v)el('date').value=v;v=param('type');if(v)el('type').value=v;v=param('fu');if(param('fu')!==''||location.search.indexOf('fu=')>=0)el('fu').value=v}
+  function goToday(){location.href=location.pathname+'?v=7&day=today&fu=needed'}
   function render(){var html='',i,o;for(i=0;i<orders.length;i++){o=orders[i];html+='<div class="card"><div class="name">'+esc(o.customer_name||'Tanpa nama')+'</div><div class="muted">'+esc(o.customer_phone||'-')+' • '+tgl(o.created_at)+'</div><div class="prod">'+esc(o.product_name||'-')+'</div><div class="line">Order: '+esc(oid(o))+'<br>Total: <b>'+rp(o.total_amount)+'</b><br>'+esc(addr(o))+'</div><span class="pill '+(paid(o)?'paid':'warn')+'">'+esc(o.payment_status||'-')+'</span><span class="pill '+(need(o)?'warn':'done')+'">'+(need(o)?'Perlu FU':'Sudah FU')+'</span><div class="act"><a class="wa" href="https://wa.me/'+hp(o.customer_phone)+'?text='+encodeURIComponent(fuText(o))+'" target="_blank">Chat WA</a><button type="button" class="copy" data-a="m" data-id="'+esc(o.id)+'">Copy template</button><button type="button" class="copy" data-a="d" data-id="'+esc(o.id)+'">Copy data</button><button type="button" class="ok" data-a="ok" data-id="'+esc(o.id)+'">Sudah FU</button></div></div>'}
     el('list').innerHTML=html;orders.length?hide(el('empty')):show(el('empty'))}
   function load(){show(el('filters'));text(el('info'),'Sync...');var p='limit=120',sd=selectedDate();if(el('q').value)p+='&q='+encodeURIComponent(el('q').value);if(sd)p+='&date='+encodeURIComponent(sd);if(el('type').value)p+='&type='+encodeURIComponent(el('type').value);if(el('fu').value)p+='&followup='+encodeURIComponent(el('fu').value);xhr('GET',API+'/orders?'+p,null,function(st,j){if(st===401){text(el('info'),'Akses ditolak dari browser ini');toast('Akses ditolak');return}if(st!==200||!j||!j.ok){text(el('info'),'Sync gagal, pencet Refresh');toast('Sync gagal');return}orders=j.orders||[];render();text(el('info'),orders.length+' order • update '+tgl(j.server_time))})}
   function mark(id){xhr('PATCH',API+'/orders/'+encodeURIComponent(id)+'/followup',JSON.stringify({status:'done',by:'CS Lite'}),function(st,j){if(st===200&&j&&j.ok){toast('Sudah FU');load()}else toast('Gagal update')})}
   function find(id){for(var i=0;i<orders.length;i++)if(orders[i].id===id)return orders[i];return {}}
-  el('refresh').onclick=load;el('today').onclick=function(){el('day').value='today';el('date').value='';load()};el('day').onchange=function(){if(el('day').value!=='custom')el('date').value='';load()};el('type').onchange=load;el('fu').onchange=load;el('date').onkeyup=function(e){e=e||window.event;if(e.keyCode===13){el('day').value='custom';load()}};el('q').onkeyup=function(e){e=e||window.event;if(e.keyCode===13)load()};el('list').onclick=function(e){e=e||window.event;var t=e.target||e.srcElement;if(!t.getAttribute)return;var id=t.getAttribute('data-id'),a=t.getAttribute('data-a'),o;if(!id)return;o=find(id);if(a==='ok')mark(id);if(a==='m')copy(fuText(o));if(a==='d')copy(dataText(o))};load();setInterval(load,30000);
+  applyUrlFilters();el('today').onclick=goToday;el('day').onchange=function(){if(el('day').value!=='custom')el('date').value=''};el('date').onkeyup=function(e){e=e||window.event;if(e.keyCode===13){el('day').value='custom';el('filters').submit()}};el('list').onclick=function(e){e=e||window.event;var t=e.target||e.srcElement;if(!t.getAttribute)return;var id=t.getAttribute('data-id'),a=t.getAttribute('data-a'),o;if(!id)return;o=find(id);if(a==='ok')mark(id);if(a==='m')copy(fuText(o));if(a==='d')copy(dataText(o))};load();setInterval(load,30000);
 })();
 </script>
 </body>
